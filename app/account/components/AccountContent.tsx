@@ -2,36 +2,17 @@
 import React, { FC, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
-import Image from "next/image";
 import Loader from "@/components/Loader";
-import Button from "@/components/Button";
 import Library from "@/components/Library";
 import { Song } from "@/types";
-import useAccountModal from "@/hooks/useAccountModal";
-import useLoadImageUser from "@/hooks/useLoadImageUser";
-
-interface UserData {
-    id: string | number;
-    full_name: string;
-    // You can add more specific fields here as needed, e.g.:
-    email?: string;
-    [key: string]: string | number | undefined; // Allow other fields with specific types
-}
 
 interface AccountContentProps {
-    userData: UserData[]; // Array of UserData
     songs: Song[];
 }
 
-const AccountContent: FC<AccountContentProps> = ({ userData, songs }) => {
+const AccountContent: FC<AccountContentProps> = ({ songs }) => {
     const router = useRouter();
-    const accountModal = useAccountModal();
     const { isLoading, user } = useUser();
-    const imageUrl = useLoadImageUser(userData);
-
-    const onClick = () => {
-        return accountModal.onOpen();
-    };
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -45,25 +26,8 @@ const AccountContent: FC<AccountContentProps> = ({ userData, songs }) => {
 
     return (
         <main className="mb-7 px-6 xsm:px-2 flex flex-col xsm:items-center gap-y-6">
-            <div className="flex acc:flex-col gap-x-6 acc:gap-y-4 acc:gap-x-0">
-                <Image
-                    src={imageUrl || '/images/liked.png'}
-                    priority
-                    className="rounded-full object-cover"
-                    width={200}
-                    height={200}
-                    alt="Profile image"
-                />
-                <div className="flex flex-col gap-y-2">
-                    <h2>User: {userData[0]?.full_name}</h2>
-                    <h2>E-mail: <span>{user?.email}</span></h2>
-                    <Button
-                        className="w-[250px] h-[50px]"
-                        onClick={onClick}
-                    >
-                        Edit profile
-                    </Button>
-                </div>
+            <div className="flex flex-col gap-y-4">
+                <h2 className="text-white">E-mail: <span>{user?.email}</span></h2>
             </div>
             <Library songs={songs} />
         </main>
