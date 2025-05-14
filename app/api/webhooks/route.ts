@@ -1,26 +1,23 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
-import { headers } from "next/headers"
+import { headers } from "next/headers";
 
-import { stripe } from "@/lib/stripe"
+import { stripe } from "@/lib/stripe";
 
 import {
     upsertProductRecord,
     upsertPriceRecord,
     manageSubscriptionStatusChange
-} from "@/lib/supabaseAdmin"
-
-
-
+} from "@/lib/supabaseAdmin";
 
 const relevantEvents = new Set([
     'product.created',
     'product.updated',
     'price.created',
-    'price.update',
+    'price.updated', // fixed typo from 'price.update'
     'checkout.session.completed',
     'customer.subscription.created',
-    'customer.subscrition.updated',
+    'customer.subscription.updated', // fixed typo from 'customer.subscrition.updated'
     'customer.subscription.deleted'
 ]);
 
@@ -34,10 +31,14 @@ export async function POST(req: Request) {
 
     try {
         if (!sig || !webhookSecret) return;
-        event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    } catch (error: any) {
-        console.log('Error message: ' + error.message);
-        return new NextResponse(`Webhook Error: ${error}`, { status: 400 });
+        event = stripe.webhooks.constructEvent(body, sig, webhookSecret) as Stripe.DiscriminatedEvent;
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.log('Error message: ' + error.message);
+            return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+        }
+        console.log('Unknown error:', error);
+        return new NextResponse('Webhook Error', { status: 400 });
     }
 
     if (relevantEvents.has(event.type)) {
@@ -48,8 +49,8 @@ export async function POST(req: Request) {
                     await upsertProductRecord(event.data.object as Stripe.Product);
                     break;
                 case 'price.created':
-                // @ts-ignore
-                case 'price.update':
+                // @ts-expect-error Stripe typings may lag here
+                case 'price.updated':
                     await upsertPriceRecord(event.data.object as Stripe.Price);
                     break;
                 case 'customer.subscription.created':
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
                         subscription.id,
                         subscription.customer as string,
                         event.type === 'customer.subscription.created'
-                    )
+                    );
                     break;
                 case 'checkout.session.completed':
                     const checkoutSession = event.data.object as Stripe.Checkout.Session;
@@ -76,9 +77,13 @@ export async function POST(req: Request) {
                 default:
                     throw new Error('Unhandled relevant event!');
             }
-        } catch (error: any) {
-            console.log(error);
-            return new NextResponse('Webhook Error: ' + error, { status: 400 });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.log(error.message);
+                return new NextResponse('Webhook Error: ' + error.message, { status: 400 });
+            }
+            console.log('Unknown error:', error);
+            return new NextResponse('Webhook Error', { status: 400 });
         }
     }
 

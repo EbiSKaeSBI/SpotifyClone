@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import Image from "next/image";
 
 import LikedContent from "./components/LikedContent";
-import LikeButton from "@/components/LikeButton";
 
 export const revalidate = 0
 

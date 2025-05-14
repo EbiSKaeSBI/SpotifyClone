@@ -1,5 +1,5 @@
 "use client";
-import React, {FC, useCallback, useEffect, useState} from 'react';
+import React, {FC, useEffect, useState} from 'react';
 import {Song} from "@/types";
 import MediaItem from "@/components/MediaItem";
 import LikeButton from "@/components/LikeButton";
@@ -42,7 +42,7 @@ const PlayerContent: FC<PlayerContentProps> = ({song, songUrl}) => {
         setVolume(value);
     }
 
-    const onPlayNext = useCallback(_debounce((): void => {
+    const onPlayNext = _debounce((): void => {
         if (player.ids.length === 0) {
             return;
         }
@@ -56,9 +56,9 @@ const PlayerContent: FC<PlayerContentProps> = ({song, songUrl}) => {
         }
 
         player.setId(nextSong);
-    }, 300), []);
+    }, 300);
 
-    const onPlayPrev = useCallback(_debounce((): void => {
+    const onPlayPrev = _debounce((): void => {
         if (player.ids.length === 0) {
             return;
         }
@@ -72,7 +72,7 @@ const PlayerContent: FC<PlayerContentProps> = ({song, songUrl}) => {
         }
 
         player.setId(prevSong);
-    }, 300), []);
+    }, 300);
 
     const [play, {pause, duration, sound}] = useSound(
         songUrl,

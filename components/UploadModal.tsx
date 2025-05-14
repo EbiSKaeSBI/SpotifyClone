@@ -1,6 +1,5 @@
 "use client"
 
-
 import uniqid from "uniqid"
 
 import useUploadModal from "@/hooks/useUploadModal";
@@ -15,7 +14,7 @@ import { useUser } from "@/hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 
-const uploadModal = () => {
+const UploadModal = () => {  // Rename to uppercase "UploadModal"
     const [isLoading, setIsLoading] = useState(false);
     const uploadModal = useUploadModal();
     const { user } = useUser();
@@ -48,7 +47,6 @@ const uploadModal = () => {
             setIsLoading(true);
             const imageFile = values.image?.[0];
             const songFile = values.song?.[0];
-
 
             if (!imageFile || !songFile || !user) {
                 toast.error('Missing fields');
@@ -103,6 +101,7 @@ const uploadModal = () => {
             reset();
             uploadModal.onClose()
         } catch (error) {
+            console.log(error);
             toast.error("Something went wrong")
         } finally {
             setIsLoading(false);
@@ -163,4 +162,4 @@ const uploadModal = () => {
     )
 }
 
-export default uploadModal;
+export default UploadModal;  

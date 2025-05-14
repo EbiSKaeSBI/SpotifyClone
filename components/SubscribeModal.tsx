@@ -1,6 +1,5 @@
 "use client";
 
-import { Content } from "next/font/google";
 import Modal from "./Modal";
 import { Price, ProductWithPrice } from "@/types";
 import Button from "./Button";
@@ -54,6 +53,7 @@ const SubscribeModal: React.FC<SubscribeModalProps> = ({
         <Modal
             title="Only for preium users"
             description="Listen to music with Spotify Premium"
+            isOpen={false}
             onChange={() => { }}
         >
             {content}

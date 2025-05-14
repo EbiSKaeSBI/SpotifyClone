@@ -4,17 +4,15 @@ import { createClient } from "@supabase/supabase-js"
 import { Database } from "@/types_db";
 import { Price, Product } from '@/types';
 
-
 import { stripe } from "./stripe";
 import { toDateTime } from "./helpers";
-import { metadata } from "@/app/layout";
-
+// Removed the unused 'metadata' import
+// import { metadata } from "@/app/layout";
 
 export const supabaseAdmin = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
-
 
 const upsertProductRecord = async (product: Stripe.Product) => {
     const productData: Product = {
@@ -57,7 +55,7 @@ const upsertPriceRecord = async (price: Stripe.Price) => {
         .upsert([priceData]);
 
     if (error) {
-        throw error
+        throw error;
     }
 
     console.log(`Price inserted/updated: ${price.id}`);
@@ -94,7 +92,7 @@ const createOrRetrieveACustomer = async ({
             throw supabaseError;
         }
         console.log(`New customer created and inserted for ${uuid}`);
-        return customer.id
+        return customer.id;
     }
 
     return data.stripe_customer_id;
@@ -105,10 +103,10 @@ const copyBillingDetailsToCustomer = async (
     payment_method: Stripe.PaymentMethod
 ) => {
     const customer = payment_method.customer as string;
-    const { name, phone, address } = payment_method.billing_details
+    const { name, phone, address } = payment_method.billing_details;
     if (!name || !phone || !address) return;
 
-    // @ts-ignore
+    // @ts-expect-error: Stripe payment method type may not be fully matched, so we expect an error here
     await stripe.customers.update(customer, { name, phone, address });
     const { error } = await supabaseAdmin
         .from('users')
@@ -129,7 +127,7 @@ const manageSubscriptionStatusChange = async (
         .from('customers')
         .select('id')
         .eq('stripe_customer_id', customerId)
-        .single()
+        .single();
 
     if (noCustomerError) throw noCustomerError;
 
@@ -142,22 +140,21 @@ const manageSubscriptionStatusChange = async (
         }
     );
 
-
     const subscriptionData: Database["public"]["Tables"]["subscriptions"]["Insert"] = {
         id: subscription.id,
         user_id: uuid,
         metadata: subscription.metadata,
-        // @ts-ignore
+        // @ts-expect-error: subscription status may vary depending on the subscription model
         status: subscription.status,
         price_id: subscription.items.data[0].price.id,
-        // @ts-ignore
+        // @ts-expect-error: subscription quantity may vary depending on your model
         quantity: subscription.quantity,
         cancel_at_period_end: subscription.cancel_at_period_end,
         cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
         canceled_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
-        // @ts-ignore
+        // @ts-expect-error: subscription current period might need conversion
         current_period_start: toDateTime(subscription.current_period_start).toISOString(),
-        // @ts-ignore
+        // @ts-expect-error: subscription current period might need conversion
         current_period_end: toDateTime(subscription.current_period_end).toISOString(),
         created: toDateTime(subscription.created).toISOString(),
         ended_at: subscription.ended_at ? toDateTime(subscription.ended_at).toISOString() : null,
@@ -165,27 +162,25 @@ const manageSubscriptionStatusChange = async (
         trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
     };
 
-    const {error} = await supabaseAdmin
-    .from('subscriptions')
-    .upsert([subscriptionData]);
+    const { error } = await supabaseAdmin
+        .from('subscriptions')
+        .upsert([subscriptionData]);
 
-    if(error) throw error;
+    if (error) throw error;
 
-    console.log(`Inserted / Update subscrition [${subscription.id} for ${uuid}]`);
+    console.log(`Inserted / Updated subscription [${subscription.id} for ${uuid}]`);
 
-    if(createAction && subscription.default_payment_method && uuid){
+    if (createAction && subscription.default_payment_method && uuid) {
         await copyBillingDetailsToCustomer(
             uuid,
             subscription.default_payment_method as Stripe.PaymentMethod
-        )
+        );
     }
 };
-
 
 export {
     upsertProductRecord,
     upsertPriceRecord,
     createOrRetrieveACustomer,
     manageSubscriptionStatusChange
-}
-
+};

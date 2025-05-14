@@ -77,6 +77,7 @@ const AccountModal: FC = () => {
             reset();
             accountModal.onClose();
         } catch (error) {
+            console.log(error);
             toast.error("Something went wrong")
         } finally {
             setIsLoading(false);
