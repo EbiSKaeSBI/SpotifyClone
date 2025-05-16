@@ -20,7 +20,7 @@ interface PlayerContentProps {
 
 const PlayerContent: FC<PlayerContentProps> = ({song, songUrl}) => {
     const player = usePlayer();
-    const [volume, setVolume] = useState<number>(Number(localStorage.getItem("volume")));
+    const [volume, setVolume] = useState<number>(1);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isRepeat, setIsRepeat] = useState<boolean>(false);
 
